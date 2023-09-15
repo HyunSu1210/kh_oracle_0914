@@ -164,7 +164,122 @@ SELECT EMPNO, ENAME, HIREDATE, ADD_MONTHS(HIREDATE, 480) AS YEAR40
 FROM EMP;
 
 -- 입사일로부터 38년 이상 근무한 직원의 정보 조회
-
+SELECT *
+FROM EMP
+WHERE MONTHS_BETWEEN(SYSDATE, HIREDATE) / 12 >= 38;
 -- 오늘 날짜에서 년도만 추출
 SELECT EXTRACT(YEAR FROM SYSDATE) AS 년도
 FROM DUAL;
+
+-- 자료형 변환하는 형 변환 함수
+-- 자동 형변환 : NUMBER + 문자타입 => NUMBER 타입으로 자동 변환
+SELECT EMPNO, ENAME, EMPNO + '500'
+FROM EMP
+WHERE ENAME = 'FORD';
+
+-- 문자 + 문자라서 오류남
+-- SELECT EMPNO, ENAME, EMPNO + 'ABCD'
+-- FROM EMP
+-- WHERE ENAME = 'FORD';
+
+-- 날짜, 숫자를 문자로 변환하는 TO_CHAR 함수
+-- 주로 날짜 데이터를 문자 데이터로 변환하는데 사용
+-- 자바의 데이터 포맷을 바꿀 때 사용
+-- 자바의 SimpleDateFormat()
+SELECT TO_CHAR(SYSDATE, 'YYYY/MM/DD HH24:MI:SS') AS "현재 날짜 시간"
+FROM DUAL;
+
+SELECT SYSDATE,
+    TO_CHAR(SYSDATE, 'CC') AS 세기,
+    TO_CHAR(SYSDATE, 'YY') AS 연도,
+    TO_CHAR(SYSDATE, 'YYYY/MM/DD PM HH:MI:SS ') AS "년/월/일 시:분:초",
+    TO_CHAR(SYSDATE, 'Q') AS 쿼터,
+    TO_CHAR(SYSDATE, 'DD') AS 일,
+    TO_CHAR(SYSDATE, 'DDD') AS 경과일,
+    TO_CHAR(SYSDATE, 'HH') AS "12시간제",
+    TO_CHAR(SYSDATE, 'HH12') AS "12시간제",
+    TO_CHAR(SYSDATE, 'HH24') AS "24시간제",
+    TO_CHAR(SYSDATE, 'W') AS 몇주차
+FROM DUAL;
+
+SELECT SYSDATE,
+     TO_CHAR(SYSDATE, 'MM') AS MM,
+     TO_CHAR(SYSDATE, 'MON', 'NLS_DATE_LANGUAGE = KOREAN' ) AS MON_KOR,
+     TO_CHAR(SYSDATE, 'MON', 'NLS_DATE_LANGUAGE = JAPANESE') AS MON_JPN,
+     TO_CHAR(SYSDATE, 'MON', 'NLS_DATE_LANGUAGE = ENGLISH' ) AS MON_ENG,
+     TO_CHAR(SYSDATE, 'MONTH', 'NLS_DATE_LANGUAGE = KOREAN' ) AS MONTH_KOR,
+     TO_CHAR(SYSDATE, 'MONTH', 'NLS_DATE_LANGUAGE = JAPANESE') AS MONTH_JPN,
+     TO_CHAR(SYSDATE, 'MONTH', 'NLS_DATE_LANGUAGE = ENGLISH' ) AS MONTH_ENG
+FROM DUAL;
+
+SELECT SYSDATE,
+     TO_CHAR(SYSDATE, 'HH24:MI:SS') AS HH24MISS,
+     TO_CHAR(SYSDATE, 'HH12:MI:SS AM') AS HHMISS_AM,
+     TO_CHAR(SYSDATE, 'HH:MI:SS P.M.') AS HHMISS_PM
+FROM DUAL;
+
+SELECT SAL,
+    TO_CHAR(SAL, '$999,999') AS SAL_$,
+    TO_CHAR(SAL, 'L999,999') AS SAL_L,
+    TO_CHAR(SAL, '999,999.00') AS SAL_1,
+    TO_CHAR(SAL, '000,999,999.00') AS SAL_2,
+    TO_CHAR(SAL, '000999999.99') AS SAL_3,
+    TO_CHAR(SAL, '999,999,00') AS SAL_4
+FROM EMP;
+
+-- TO_NUMBER() : NUMBER 타입으로 형 변환
+SELECT TO_NUMBER('1300') - 1500
+FROM DUAL;
+
+-- TO_DATE() : 문자열로 명시된 날짜 타입으로 형 변환
+SELECT TO_DATE('2022/08/20','YY/MM/DD')
+FROM DUAL;
+
+-- 1981년 6월 1일 이후에 입사한 사원 정보 출력하기
+SELECT *
+FROM EMP
+WHERE HIREDATE > TO_DATE('1981/06/01','YYYY/MM/DD');
+
+-- NULL 처리 함수
+-- NULL은 0이나 공백과는 다른 의미, 연산 불가
+-- NVL(NULL인지 검사할 열, 앞의 열 데이터가 NULL인 경우 반환할 데이터)
+-- NVL(COMM, 0) 이면 COMM이 NULL이면 0으로 바꾸라는 의미
+SELECT EMPNO, ENAME, SAL, COMM, SAL+COMM,
+NVL(COMM, 0), SAL+NVL(COMM, 0)
+FROM EMP;
+
+-- NVL2() : NULL이 아닌 경우와 NULL인 경우 모두에 대해서 값을 지정할 수 있음
+-- NVL2(COMM, '0', 'X') 이면 COMM이 NULL이 아니면 O, NULL이면 X
+SELECT EMPNO, ENAME, COMM,
+NVL2(COMM, '0', 'X') AS 성과급유무,
+NVL2(COMM, SAL*12+COMM,SAL*12) AS 연봉
+FROM EMP;
+
+-- NULLIF : 두 값이 동일하면 NULL, 다르면 첫번째 값 반환
+SELECT NULLIF(10,10), NULLIF('A','B')
+FROM DUAL;
+
+--DECODE : 주어진 데이터 값이 조건 값과 일치하는 값 출력
+-- 일치하는 값이 없으면 기본 값 출력하기
+SELECT EMPNO, ENAME, JOB, SAL,
+DECODE(JOB, 'MANAGER',SAL*1.1,'SALESMAN',SAL*1.05,'ANALYST',SAL,SAL*1.03) AS 연봉인상
+FROM EMP;
+
+-- CASE 문
+SELECT EMPNO, ENAME, JOB, SAL,
+    CASE JOB
+        WHEN 'MANAGE' THEN SAL*1.1
+        WHEN 'SALESMAN' THEN SAL*1.05
+        WHEN 'ANALYST' THEN SAL
+        ELSE SAL*1.03
+    END AS UPSAL
+FROM EMP;
+
+-- 열 값에 따라서 출력 값이 달라지는 CASE 문
+SELECT EMPNO, ENAME,
+    CASE
+        WHEN COMM IS NULL THEN '해당사항없음'
+        WHEN COMM = 0 THEN '수당없음'
+        WHEN COMM > 0 THEN '수당 : ' || COMM
+    END AS 성과급기준
+FROM EMP;
